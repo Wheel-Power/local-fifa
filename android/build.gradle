@@ -24,9 +24,18 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    signingConfigs {
+        release {
+            storeFile file("../localfifa.keystore")
+            storePassword "localfifa"
+            keyAlias "localfifa"
+            keyPassword "localfifa"
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
