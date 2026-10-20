@@ -47,3 +47,10 @@ tasks.register('dist', Jar) {
 dist.dependsOn classes
 
 eclipse.project.name = appName + "-desktop"
+
+tasks.register('runSmoke', JavaExec) {
+    dependsOn classes
+    mainClass = "com.senegas.kickoff.desktop.NetSmokeTest"
+    classpath = sourceSets.main.runtimeClasspath
+    ignoreExitValue = false
+}

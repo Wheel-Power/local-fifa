@@ -157,6 +157,11 @@ public class Tactic {
 		int regionIndex = getRegionIndex(position, this.team);
 		//Gdx.app.log("Tactic", "region index: " + regionIndex);
 		for (int playerIndex = 0; playerIndex < 10; playerIndex++) {
+			// leave the human-controlled player alone, their destination
+			// comes from touch input (local or remote)
+			if (this.team.isHuman() && this.team.getControlled() == this.team.getPlayers().get(playerIndex)) {
+				continue;
+			}
 			Vector3 playerLocation = PitchUtils.pitchToGlobal(this.team.getDirection() == Direction.NORTH ? this.locations[playerIndex][regionIndex].x : (float)PITCH_WIDTH_IN_PX - this.locations[playerIndex][regionIndex].x,
 					this.team.getDirection() == Direction.NORTH ? this.locations[playerIndex][regionIndex].y : (float)PITCH_HEIGHT_IN_PX - this.locations[playerIndex][regionIndex].y);
 			this.team.getPlayers().get(playerIndex).setDestination(playerLocation);

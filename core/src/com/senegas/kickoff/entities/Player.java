@@ -118,6 +118,20 @@ public class Player implements Entity {
     }
 
     /**
+     * Hard position override (network snapshot correction) keeping the
+     * collision bounds in sync.
+     */
+    public void netSetPosition(float x, float y) {
+        this.position.set(x, y, 0);
+        this.bounds.setPosition(x, y);
+    }
+
+    /** Re-syncs collision bounds after the position vector was mutated. */
+    public void syncBounds() {
+        this.bounds.setPosition(this.position.x, this.position.y);
+    }
+
+    /**
      * Gets the player destination
      * @return the destination
      */

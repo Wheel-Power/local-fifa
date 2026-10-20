@@ -137,6 +137,10 @@ public class Ball implements Entity {
         return this.lastPosition;
     }
 
+    public Vector3 getVelocity() {
+        return this.velocity;
+    }
+
     /**
      * Apply a kick to the ball
      *

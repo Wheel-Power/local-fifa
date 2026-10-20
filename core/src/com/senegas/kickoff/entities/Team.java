@@ -28,7 +28,9 @@ public class Team implements Disposable {
 	private Color mainColor;
 	private Texture texture;
     private Array<Player> players = new Array<>();
-	private Player closest;
+    private Player closest;
+    private boolean humanControlled;
+    private Player controlled;
 
     /**
 	 * Constructor
@@ -137,8 +139,54 @@ public class Team implements Disposable {
 	public void setupThrowIn(Vector3 position, boolean attack) {
 		calculateClosestPlayer(position);
 		if (attack) {
-            this.closest.setDestination(position);
+			this.closest.setDestination(position);
 		}
+	}
+
+	/**
+	 * Marks this team as driven by a human (local touch or remote peer).
+	 * Human teams keep one "controlled" player that the tactic AI must not
+	 * move around.
+	 */
+	public void setHuman(boolean humanControlled) {
+		this.humanControlled = humanControlled;
+		if (!humanControlled) {
+			this.controlled = null;
+		}
+	}
+
+	public boolean isHuman() {
+		return this.humanControlled;
+	}
+
+	/**
+	 * Picks the player a human controls: the one closest to the ball, with
+	 * hysteresis so control does not flip-flop between two nearby players.
+	 */
+	public Player updateControlled(Vector3 ballPosition) {
+		if (!this.humanControlled) return null;
+		if (this.controlled == null || !this.players.contains(this.controlled, true)) {
+			this.controlled = this.players.get(0);
+		}
+		float currentDistance = this.controlled.getPosition().dst2(ballPosition);
+		Player best = this.controlled;
+		float bestDistance = currentDistance;
+		for (Player player : this.players) {
+			float distance = player.getPosition().dst2(ballPosition);
+			if (distance < bestDistance) {
+				best = player;
+				bestDistance = distance;
+			}
+		}
+		// only switch when the alternative is clearly (25%) closer
+		if (best != this.controlled && bestDistance < currentDistance * 0.5625f) {
+			this.controlled = best;
+		}
+		return this.controlled;
+	}
+
+	public Player getControlled() {
+		return this.controlled;
 	}
 
 	public void setupKickoff(boolean attack) {

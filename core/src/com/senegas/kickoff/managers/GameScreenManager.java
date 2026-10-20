@@ -1,7 +1,9 @@
 package com.senegas.kickoff.managers;
 
 import com.senegas.kickoff.KickOff;
+import com.senegas.kickoff.net.Link;
 import com.senegas.kickoff.screens.AbstractScreen;
+import com.senegas.kickoff.screens.LobbyScreen;
 import com.senegas.kickoff.screens.LoadingScreen;
 import com.senegas.kickoff.screens.MainMenuScreen;
 import com.senegas.kickoff.screens.MatchScreen;
@@ -20,7 +22,8 @@ public class GameScreenManager {
         PLAY,
         LOADING,
         SPLASH,
-        SETTINGS
+        SETTINGS,
+        MULTIPLAYER
     }
 
     public GameScreenManager(KickOff app) {
@@ -36,10 +39,25 @@ public class GameScreenManager {
         this.gameScreens.put(STATE.SPLASH, new SplashScreen(this.app));
         this.gameScreens.put(STATE.MAIN_MENU, new MainMenuScreen(this.app));
         this.gameScreens.put(STATE.PLAY, new MatchScreen(this.app));
+        this.gameScreens.put(STATE.MULTIPLAYER, new LobbyScreen(this.app));
     }
 
     public void setScreen(STATE nextScreen) {
         this.app.setScreen(this.gameScreens.get(nextScreen));
+    }
+
+    /**
+     * (Re)creates the match screen for a fresh match: solo practice, or a
+     * Bluetooth match over the given link.
+     */
+    public void startMatch(MatchScreen.Mode mode, Link link) {
+        AbstractScreen previous = this.gameScreens.get(STATE.PLAY);
+        if (previous != null) {
+            previous.dispose();
+        }
+        MatchScreen match = new MatchScreen(this.app, mode, link);
+        this.gameScreens.put(STATE.PLAY, match);
+        setScreen(STATE.PLAY);
     }
 
     public void dispose() {

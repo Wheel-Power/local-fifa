@@ -14,55 +14,82 @@ public class Hud implements Disposable {
     public Stage stage;
     private Viewport viewport;
 
-    static private String time;
-    private float timeCount;
-
-    private String score;
-
-    private Label timerLabel;
+    private Label homeLabel;
     private Label scoreLabel;
+    private Label awayLabel;
+    private Label timerLabel;
+    private Label bannerLabel;
+
+    private BitmapFont font;
+    private BitmapFont bannerFont;
+
+    private float bannerTime;
 
     private MatchScreen match;
 
     public Hud(MatchScreen match) {
         this.match = match;
 
-        this.timeCount = 3 * 60;
-        this.time = String.format("%2d : %02d", 4, 56);
-        this.score = String.format("%2d    %2d", this.match.getScoreHome(), this.match.getScoreAway());
-
         this.viewport = new ScreenViewport();
         this.stage = new Stage(this.viewport, match.getApp().batch);
 
-        Table table = new Table();
-        table.bottom();
-        table.setFillParent(true);
+        this.font = new BitmapFont();
+        this.font.getData().setScale(2f);
+        this.bannerFont = new BitmapFont();
+        this.bannerFont.getData().setScale(4f);
 
-        this.timerLabel = new Label(String.format("%s", time), new Label.LabelStyle(new BitmapFont(), Color.BLACK));
-        this.scoreLabel = new Label(String.format("%s", this.score), new Label.LabelStyle(new BitmapFont(), Color.BLACK));
+        Table top = new Table();
+        top.top();
+        top.setFillParent(true);
 
-        //table.add(this.scoreLabel).expandX().padTop(16);
-        //table.row();
-        //table.add(this.timerLabel).expandX().padTop(16);
-        //table.row().expandX().fillX();
+        this.homeLabel = new Label("HOME", new Label.LabelStyle(this.font, new Color(1f, 0.3f, 0.3f, 1f)));
+        this.scoreLabel = new Label("0 - 0", new Label.LabelStyle(this.font, Color.WHITE));
+        this.awayLabel = new Label("AWAY", new Label.LabelStyle(this.font, new Color(0.35f, 0.55f, 1f, 1f)));
+        this.timerLabel = new Label("3:00", new Label.LabelStyle(this.font, Color.WHITE));
 
-        //stage.addActor(radar);
-        this.stage.addActor(table);
+        top.add(this.homeLabel).padTop(12).padRight(20);
+        top.add(this.scoreLabel).padTop(12);
+        top.add(this.awayLabel).padTop(12).padLeft(20);
+        top.row();
+        top.add(this.timerLabel).colspan(3).padTop(4);
+        this.stage.addActor(top);
+
+        Table center = new Table();
+        center.setFillParent(true);
+        this.bannerLabel = new Label("", new Label.LabelStyle(this.bannerFont, Color.YELLOW));
+        this.bannerLabel.setVisible(false);
+        center.add(this.bannerLabel);
+        this.stage.addActor(center);
+    }
+
+    public void showBanner(String text, Color color) {
+        this.bannerLabel.setText(text);
+        this.bannerLabel.setColor(color);
+        this.bannerLabel.setVisible(true);
+        this.bannerTime = 3f;
     }
 
     public void update(float deltaTime) {
-        //this.timeCount -= deltaTime;
-        int minutes = ((int) this.timeCount) / 60;
-        int seconds = ((int) this.timeCount) % 60;
-        //this.time = String.format("%2d : %02d", minutes, seconds);
-        //this.timerLabel.setText(String.format("%s", this.time));
+        this.scoreLabel.setText(this.match.getScoreHome() + " - " + this.match.getScoreAway());
 
-        this.score = String.format("%2d    %2d", this.match.getScoreHome(), this.match.getScoreAway());
-        this.scoreLabel.setText(String.format("%s", this.score));
+        int totalSeconds = Math.max(0, (int) Math.ceil(this.match.getTimeLeft()));
+        this.timerLabel.setText(String.format("%d:%02d", totalSeconds / 60, totalSeconds % 60));
+
+        if (this.bannerLabel.isVisible()) {
+            this.bannerTime -= deltaTime;
+            Color c = this.bannerLabel.getColor();
+            c.a = (float) Math.min(1.0, Math.max(0.0, this.bannerTime));
+            if (this.bannerTime <= 0) {
+                this.bannerLabel.setVisible(false);
+                c.a = 1f;
+            }
+        }
     }
 
     @Override
     public void dispose() {
         this.stage.dispose();
+        this.font.dispose();
+        this.bannerFont.dispose();
     }
 }
