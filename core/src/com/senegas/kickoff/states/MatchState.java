@@ -67,6 +67,7 @@ public enum MatchState implements State<MatchScreen> {
             match.getCameraHelper().setTarget(match.getPitch().getCenterSpot());
             match.getHomeTeam().setupKickoff(match.getKickoffAttack() == 0);
             match.getAwayTeam().setupKickoff(match.getKickoffAttack() == 1);
+            match.requestShot("intro", 0.8f);
         }
 
         @Override
@@ -98,6 +99,7 @@ public enum MatchState implements State<MatchScreen> {
         @Override
         public void enter(MatchScreen match) {
             match.getCameraHelper().setTarget(null);
+            match.onInplayEntered();
         }
 
         @Override
@@ -159,6 +161,7 @@ public enum MatchState implements State<MatchScreen> {
         @Override
         public void enter(MatchScreen match) {
             this.elapsedTimeInSeconds = 0;
+            match.requestShot("goal", 0.7f);
             match.crowd.play(0.6f);
             Color color = match.getLastScorer() == 0 ? match.getHomeTeam().getMainColor() : match.getAwayTeam().getMainColor();
             match.getHud().showBanner("GOAL!!!", color);

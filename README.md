@@ -5,6 +5,27 @@
 基于开源项目 [ssenegas/kickoff (Open Kick-Off)](https://github.com/ssenegas/kickoff)（MIT 协议）二次开发，
 使用 Java + [libGDX](https://libgdx.badlogicgames.com/) 1.12.1。
 
+## 画面
+
+| 主菜单 | 蓝牙大厅 |
+| :---: | :---: |
+| ![菜单](docs/screenshots/menu.png) | ![大厅](docs/screenshots/lobby-host.png) |
+
+| 开球 | 对战中（主机视角） | 对战中（客机视角） |
+| :---: | :---: | :---: |
+| ![开球](docs/screenshots/match-intro.png) | ![主机](docs/screenshots/match-inplay-host.png) | ![客机](docs/screenshots/match-inplay-client.png) |
+
+| 进球！（主机） | 进球！（客机同步） |
+| :---: | :---: |
+| ![进球主机](docs/screenshots/goal-host.png) | ![进球客机](docs/screenshots/goal-client.png) |
+
+## 下载
+
+- APK 直链：[Local-FIFA-1.0.apk](https://github.com/wheelpower/local-fifa/releases/download/v1.0.0/Local-FIFA-1.0.apk)
+- 全部版本：[Releases](https://github.com/wheelpower/local-fifa/releases/latest)
+
+> 两台安卓手机各装一份，系统蓝牙设置里配对后即可开战。
+
 ## 玩法
 
 - **单机**：主菜单 `SOLO MATCH`，操控红队（HOME），蓝队为 AI。

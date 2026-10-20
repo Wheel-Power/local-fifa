@@ -5,8 +5,11 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -32,6 +35,7 @@ import com.senegas.kickoff.utils.Direction;
 import com.senegas.kickoff.utils.PitchUtils;
 import com.senegas.kickoff.utils.RuleBook;
 import com.senegas.kickoff.utils.Stopwatch;
+import com.badlogic.gdx.utils.ScreenUtils;
 
 import static com.senegas.kickoff.pitches.FootballDimensionConstants.CM_PER_PIXEL;
 
@@ -95,6 +99,14 @@ public class MatchScreen extends AbstractScreen {
 
     private float telemetryAcc;
     private float matchElapsed;
+    private float inPlayElapsed;
+    private boolean goalFired;
+    private boolean playShotTaken;
+
+    /** in-game screenshot hook (desktop automation): localfifa.shots=/tmp */
+    private final String shotDir = System.getProperty("localfifa.shots");
+    private float shotTimer = -1f;
+    private String shotTag;
 
     private static final boolean DEBUG = true;
 
@@ -281,6 +293,53 @@ public class MatchScreen extends AbstractScreen {
                 Gdx.app.exit();
             }
         }
+
+        // screenshot hook: force a goal after N seconds of actual play (host
+        // side triggers it once; the client follows through the snapshot)
+        float goalAt = Float.parseFloat(System.getProperty("localfifa.goalAt", "0"));
+        if (goalAt > 0 && !this.goalFired && this.mode != Mode.CLIENT
+                && this.stateMachine.getCurrentState() == MatchState.INPLAY) {
+            this.inPlayElapsed += deltaTime;
+            if (this.inPlayElapsed > goalAt) {
+                this.goalFired = true;
+                this.scoreHome++;
+                this.lastScorer = 0;
+                this.kickoffAttack = 1;
+                this.stateMachine.changeState(MatchState.GOAL);
+            }
+        }
+
+        if (this.shotTimer >= 0f) {
+            this.shotTimer -= deltaTime;
+            if (this.shotTimer <= 0f) {
+                this.shotTimer = -1f;
+                saveScreenshot(this.shotTag);
+            }
+        }
+    }
+
+    public void requestShot(String tag, float delaySeconds) {
+        if (this.shotDir == null) return;
+        this.shotTag = tag;
+        this.shotTimer = delaySeconds;
+    }
+
+    private void saveScreenshot(String tag) {
+        try {
+            int w = Gdx.graphics.getWidth();
+            int h = Gdx.graphics.getHeight();
+            byte[] pixels = ScreenUtils.getFrameBufferPixels(0, 0, w, h, true);
+            Pixmap pixmap = new Pixmap(w, h, Pixmap.Format.RGBA8888);
+            java.nio.ByteBuffer buffer = java.nio.ByteBuffer.allocateDirect(pixels.length);
+            buffer.put(pixels);
+            buffer.position(0);
+            pixmap.setPixels(buffer);
+            PixmapIO.writePNG(new FileHandle(this.shotDir + "/shot-" + tag + "-" + this.mode.name().toLowerCase() + ".png"), pixmap);
+            pixmap.dispose();
+            Gdx.app.log(TAG, "screenshot saved: " + tag);
+        } catch (Exception e) {
+            Gdx.app.log(TAG, "screenshot failed: " + e);
+        }
     }
 
     @Override
@@ -417,6 +476,14 @@ public class MatchScreen extends AbstractScreen {
 
         if (RuleBook.outOfPlay(last, cur, this.restartPoint)) {
             this.stateMachine.changeState(MatchState.THROW_IN);
+        }
+    }
+
+    /** Called by the state machine on INPLAY entry (screenshot hook fires once). */
+    public void onInplayEntered() {
+        if (!this.playShotTaken) {
+            this.playShotTaken = true;
+            requestShot("inplay", 4f);
         }
     }
 
